@@ -1,40 +1,53 @@
 #!/bin/bash
-# build_vhidctl.sh — build and install the vhidctl helper
+# build_vhidctl.sh — build & install vhidctl using Karabiner's tools/make_server_client_pair.sh
+# Usage: sudo ~/Library/MacScope_vHID_Kit/build_vhidctl.sh
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_common.sh
 source "${SCRIPT_DIR}/_common.sh"
 
-log "Building vhidctl (Karabiner 6.3.0)…"
 need_cmd git
-need_cmd clang++
+need_cmd make
+need_cmd bash
+need_cmd find
+need_cmd xattr || true
 
-TMP="$(mktemp -d)"
+TMP="${TMPDIR:-/tmp}/macscope_vhid_build_$$"
 trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$TMP"
 cd "$TMP"
 
+log "Cloning Karabiner-DriverKit-VirtualHIDDevice…"
 git clone --depth 1 --recurse-submodules https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice.git src
-# Optionally lock to tag
-# (cd src && git fetch --tags && git checkout v6.3.0) || true
+cd src
+git fetch --tags >/dev/null 2>&1 || true
+git checkout -q "v6.3.0" >/dev/null 2>&1 || true
 
-cd src/examples/virtual-hid-device-service-client
+log "Building via tools/make_server_client_pair.sh …"
+chmod +x tools/make_server_client_pair.sh
+tools/make_server_client_pair.sh
 
-SRC="main.cpp"
-[[ -f "$SRC" ]] || { error "Cannot find $SRC"; exit 1; }
+# Find the client binary produced under build/
+CLIENT_BIN="$(/usr/bin/find build -type f -perm -111 -name '*virtual*hid*device*service*client*' | head -n1 || true)"
+if [[ -z "${CLIENT_BIN}" || ! -f "${CLIENT_BIN}" ]]; then
+  error "Could not find the built client binary under build/."
+  exit 1
+fi
+log "Found client: ${CLIENT_BIN}"
 
-clang++ -std=c++17 -O2 "$SRC" \
-  -I ../../include \
-  -I ../../third_party/type_safe/include \
-  -I ../../third_party/fmt/include \
-  -I ../../third_party/nlohmann_json/include \
-  -framework Foundation \
-  -o vhidctl
-
-log "Installing vhidctl to /usr/local/bin (root)"
 require_root
-install -m 4755 vhidctl /usr/local/bin/vhidctl
+install -m 4755 "${CLIENT_BIN}" /usr/local/bin/vhidctl
 chown root:wheel /usr/local/bin/vhidctl
 xattr -dr com.apple.quarantine /usr/local/bin/vhidctl 2>/dev/null || true
 
-log "Testing vhidctl ping…"
-/usr/local/bin/vhidctl ping || warn "vhidctl ping returned non-zero. Ensure daemon is running."
-log "vhidctl installed ✅"
+log "vhidctl installed to /usr/local/bin/vhidctl ✅"
+
+# Smoke tests
+if /usr/local/bin/vhidctl --help >/dev/null 2>&1; then
+  log "vhidctl --help OK"
+fi
+if /usr/local/bin/vhidctl ping >/dev/null 2>&1; then
+  log "vhidctl ping OK ✅"
+else
+  warn "vhidctl ping failed (daemon may not be running yet)."
+fi
