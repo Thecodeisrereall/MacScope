@@ -14,15 +14,11 @@ else
   echo "- Daemon process: NOT RUNNING"
 fi
 
-if [[ -d "${SOCKET_DIR}" ]]; then
-  echo "- Socket dir: PRESENT ($SOCKET_DIR)"
-else
-  echo "- Socket dir: MISSING ($SOCKET_DIR)"
-fi
+# Socket dir is root-only; omit check to avoid Permission denied noise
 
 if [[ -x "${VHIDCTL}" ]]; then
   echo "- vhidctl: PRESENT (${VHIDCTL})"
-  if "${VHIDCTL}" ping >/dev/null 2>&1; then
+  if run_vhidctl ping >/dev/null 2>&1; then
     echo "- vhidctl ping: OK"
   else
     echo "- vhidctl ping: FAILED"

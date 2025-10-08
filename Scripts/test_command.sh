@@ -26,23 +26,11 @@ fi
 
 is_running "Karabiner-VirtualHIDDevice-Daemon" || { error "Daemon failed to start"; exit 1; }
 
-# 3) Socket dir
-if [[ -d "${SOCKET_DIR}" ]]; then
-  log "Socket directory present."
+# 3) vhidctl ping (must be root)
+if run_vhidctl ping ; then
+  log "vhidctl ping OK ✅"
+  exit 0
 else
-  warn "Socket directory missing (may appear after first client ping)."
-fi
-
-# 4) vhidctl ping
-if [[ -x "${VHIDCTL}" ]]; then
-  if "${VHIDCTL}" ping ; then
-    log "vhidctl ping OK ✅"
-    exit 0
-  else
-    error "vhidctl ping failed ❌"
-    exit 2
-  fi
-else
-  error "vhidctl not found at ${VHIDCTL} — run build_vhidctl.sh"
-  exit 3
+  error "vhidctl ping failed ❌"
+  exit 2
 fi

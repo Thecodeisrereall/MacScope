@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "karabiner": "6.3.0",
   "build_date": "2025-10-08",
   "maintainer": "Thecodeisrereall",
-  "notes": "Switch to manifest.json; build uses tools/make_server_client_pair.sh; added start_manager/start_daemon/test_command; improved logging and permissions.",
+  "notes": "Fix build to use examples/virtual-hid-device-service-client (make + XcodeGen). Run vhidctl with sudo when not root to avoid Permission denied.",
   "files": [
     "_common.sh",
     "build_vhidctl.sh",

@@ -21,5 +21,14 @@ VHIDCTL="/usr/local/bin/vhidctl"
 KIT_DIR="${HOME}/Library/MacScope_vHID_Kit"
 MANIFEST="${KIT_DIR}/manifest.json"
 
-# Small helper
+# Helpers
 is_running() { pgrep -fl "$1" >/dev/null 2>&1; }
+
+# Run vhidctl with sudo if needed (client must be root, per README)
+run_vhidctl() {
+  if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+    sudo "${VHIDCTL}" "$@"
+  else
+    "${VHIDCTL}" "$@"
+  fi
+}
