@@ -1,9 +1,9 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "karabiner": "6.3.0",
   "build_date": "2025-10-08",
   "maintainer": "Thecodeisrereall",
-  "notes": "Rename client from macscope-vhidctl to macscope-vhid. All scripts updated accordingly.",
+  "notes": "Fix Homebrew install flow (no root; Terminal fallback when non-interactive). Fix start_daemon/test_command syntax.",
   "files": [
     "_common.sh",
     "dependencies.sh",
