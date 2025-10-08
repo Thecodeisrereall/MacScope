@@ -10,6 +10,7 @@ require_root(){ [[ ${EUID:-$(id -u)} -eq 0 ]] || { error "Run as root (use sudo)
 KARB_MANAGER="/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager"
 KARB_DAEMON="/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon"
 SOCKET_DIR="/Library/Application Support/org.pqrs/tmp/rootonly/vhidd_server"
+SOCKET_DIR_FALLBACK="/Library/Application Support/org.pqrs/tmp/vhidd_server"
 MACSCOPECTL="/usr/local/bin/macscope-vhid"
 KIT_DIR="${HOME}/Library/MacScope_vHID_Kit"
 MANIFEST="${KIT_DIR}/manifest.json"

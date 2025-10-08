@@ -1,9 +1,9 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "karabiner": "6.3.0",
   "build_date": "2025-10-08",
   "maintainer": "Thecodeisrereall",
-  "notes": "Fix Homebrew install flow (no root; Terminal fallback when non-interactive). Fix start_daemon/test_command syntax.",
+  "notes": "Improve macscope-vhid ping: search multiple paths, accept any socket filename, 6s wait, verbose diagnostics. test_command.sh waits after daemon start & shows directory content if ping fails.",
   "files": [
     "_common.sh",
     "dependencies.sh",

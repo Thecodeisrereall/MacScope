@@ -8,7 +8,7 @@ pkill -f "Karabiner-VirtualHIDDevice-Daemon" || true
 sleep 1
 log "Starting daemon…"
 nohup "${KARB_DAEMON}" >/dev/null 2>&1 &
-sleep 1
+sleep 2
 if is_running "Karabiner-VirtualHIDDevice-Daemon"; then
   log "Daemon restarted ✅"
 else
