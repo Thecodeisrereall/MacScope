@@ -1,6 +1,6 @@
-// macscope-vhidctl.cpp — minimal root-only ping client for Karabiner VirtualHID daemon
-// Build: clang++ -std=c++17 -O2 macscope-vhidctl.cpp -o macscope-vhidctl
-// Usage: sudo macscope-vhidctl ping
+// macscope-vhid.cpp — minimal root-only ping client for Karabiner VirtualHID daemon
+// Build: clang++ -std=c++17 -O2 macscope-vhid.cpp -o macscope-vhid
+// Usage: sudo macscope-vhid ping
 #include <iostream>
 #include <vector>
 #include <string>
@@ -50,11 +50,10 @@ static bool try_connect(const std::string& path) {
 
 static int cmd_ping() {
   if (!is_root()) {
-    std::cerr << "macscope-vhidctl: must be run as root (sudo) to access daemon socket.\n";
+    std::cerr << "macscope-vhid: must be run as root (sudo) to access daemon socket.\n";
     return 2;
   }
 
-  // retry a few times in case daemon just started
   for (int attempt = 0; attempt < 10; ++attempt) {
     auto socks = list_sockets();
     for (const auto& s : socks) {
@@ -74,6 +73,6 @@ int main(int argc, char** argv) {
   if (argc >= 2 && std::string(argv[1]) == "ping") {
     return cmd_ping();
   }
-  std::cerr << "usage: macscope-vhidctl ping\n";
-  return 64; // EX_USAGE
+  std::cerr << "usage: macscope-vhid ping\n";
+  return 64;
 }

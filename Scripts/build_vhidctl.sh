@@ -1,23 +1,14 @@
 #!/bin/bash
-# build_vhidctl.sh — (re-purposed) build & install MacScope's minimal ping client as macscope-vhidctl
-# We intentionally DO NOT build/run the upstream example client.
+# build_vhidctl.sh — now builds our minimal client as /usr/local/bin/macscope-vhid
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=_common.sh
 source "${SCRIPT_DIR}/_common.sh"
-
 need_cmd clang++
-
-TMP="${TMPDIR:-/tmp}/macscope_build_$$"
-trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP"
-cd "$TMP"
-
-# Write the minimal client source (also present in repo at Source/cli/macscopectl/)
-cat > macscope-vhidctl.cpp <<"EOF"
-// macscope-vhidctl.cpp — minimal root-only ping client for Karabiner VirtualHID daemon
-// Build: clang++ -std=c++17 -O2 macscope-vhidctl.cpp -o macscope-vhidctl
-// Usage: sudo macscope-vhidctl ping
+TMP="${TMPDIR:-/tmp}/macscope_build_$$"; trap 'rm -rf "$TMP"' EXIT; mkdir -p "$TMP"; cd "$TMP"
+cat > macscope-vhid.cpp <<"EOF"
+// macscope-vhid.cpp — minimal root-only ping client for Karabiner VirtualHID daemon
+// Build: clang++ -std=c++17 -O2 macscope-vhid.cpp -o macscope-vhid
+// Usage: sudo macscope-vhid ping
 #include <iostream>
 #include <vector>
 #include <string>
@@ -67,11 +58,10 @@ static bool try_connect(const std::string& path) {
 
 static int cmd_ping() {
   if (!is_root()) {
-    std::cerr << "macscope-vhidctl: must be run as root (sudo) to access daemon socket.\n";
+    std::cerr << "macscope-vhid: must be run as root (sudo) to access daemon socket.\n";
     return 2;
   }
 
-  // retry a few times in case daemon just started
   for (int attempt = 0; attempt < 10; ++attempt) {
     auto socks = list_sockets();
     for (const auto& s : socks) {
@@ -91,20 +81,16 @@ int main(int argc, char** argv) {
   if (argc >= 2 && std::string(argv[1]) == "ping") {
     return cmd_ping();
   }
-  std::cerr << "usage: macscope-vhidctl ping\n";
-  return 64; // EX_USAGE
+  std::cerr << "usage: macscope-vhid ping\n";
+  return 64;
 }
 
 EOF
-
-log "Compiling macscope-vhidctl…"
-clang++ -std=c++17 -O2 macscope-vhidctl.cpp -o macscope-vhidctl
-
-# Install (no setuid; always run with sudo when needed)
+log "Compiling macscope-vhid…"
+clang++ -std=c++17 -O2 macscope-vhid.cpp -o macscope-vhid
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then SUDO=sudo; else SUDO=; fi
-$SUDO install -m 755 macscope-vhidctl /usr/local/bin/macscope-vhidctl
-$SUDO chown root:wheel /usr/local/bin/macscope-vhidctl || true
-$SUDO xattr -dr com.apple.quarantine /usr/local/bin/macscope-vhidctl 2>/dev/null || true
-
-log "Installed /usr/local/bin/macscope-vhidctl ✅"
-log "Try: sudo macscope-vhidctl ping"
+$SUDO install -m 755 macscope-vhid /usr/local/bin/macscope-vhid
+$SUDO chown root:wheel /usr/local/bin/macscope-vhid || true
+$SUDO xattr -dr com.apple.quarantine /usr/local/bin/macscope-vhid 2>/dev/null || true
+log "Installed /usr/local/bin/macscope-vhid ✅"
+log "Try: sudo macscope-vhid ping"

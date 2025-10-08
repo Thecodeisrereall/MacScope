@@ -1,9 +1,9 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "karabiner": "6.3.0",
   "build_date": "2025-10-08",
   "maintainer": "Thecodeisrereall",
-  "notes": "Replace upstream example with our own minimal client (macscope-vhidctl). Scripts now build and use macscope-vhidctl ping instead of vhidctl.",
+  "notes": "Rename client from macscope-vhidctl to macscope-vhid. All scripts updated accordingly.",
   "files": [
     "_common.sh",
     "dependencies.sh",
