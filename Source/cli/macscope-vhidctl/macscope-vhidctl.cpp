@@ -1,20 +1,3 @@
-#!/bin/bash
-# build_vhidctl.sh — (re-purposed) build & install MacScope's minimal ping client as macscope-vhidctl
-# We intentionally DO NOT build/run the upstream example client.
-set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=_common.sh
-source "${SCRIPT_DIR}/_common.sh"
-
-need_cmd clang++
-
-TMP="${TMPDIR:-/tmp}/macscope_build_$$"
-trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP"
-cd "$TMP"
-
-# Write the minimal client source (also present in repo at Source/cli/macscopectl/)
-cat > macscope-vhidctl.cpp <<"EOF"
 // macscope-vhidctl.cpp — minimal root-only ping client for Karabiner VirtualHID daemon
 // Build: clang++ -std=c++17 -O2 macscope-vhidctl.cpp -o macscope-vhidctl
 // Usage: sudo macscope-vhidctl ping
@@ -94,17 +77,3 @@ int main(int argc, char** argv) {
   std::cerr << "usage: macscope-vhidctl ping\n";
   return 64; // EX_USAGE
 }
-
-EOF
-
-log "Compiling macscope-vhidctl…"
-clang++ -std=c++17 -O2 macscope-vhidctl.cpp -o macscope-vhidctl
-
-# Install (no setuid; always run with sudo when needed)
-if [[ ${EUID:-$(id -u)} -ne 0 ]]; then SUDO=sudo; else SUDO=; fi
-$SUDO install -m 755 macscope-vhidctl /usr/local/bin/macscope-vhidctl
-$SUDO chown root:wheel /usr/local/bin/macscope-vhidctl || true
-$SUDO xattr -dr com.apple.quarantine /usr/local/bin/macscope-vhidctl 2>/dev/null || true
-
-log "Installed /usr/local/bin/macscope-vhidctl ✅"
-log "Try: sudo macscope-vhidctl ping"

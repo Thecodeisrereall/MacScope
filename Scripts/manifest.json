@@ -1,11 +1,12 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.4",
   "karabiner": "6.3.0",
   "build_date": "2025-10-08",
   "maintainer": "Thecodeisrereall",
-  "notes": "Fix build to use examples/virtual-hid-device-service-client (make + XcodeGen). Run vhidctl with sudo when not root to avoid Permission denied.",
+  "notes": "Replace upstream example with our own minimal client (macscope-vhidctl). Scripts now build and use macscope-vhidctl ping instead of vhidctl.",
   "files": [
     "_common.sh",
+    "dependencies.sh",
     "build_vhidctl.sh",
     "start_manager.sh",
     "start_daemon.sh",

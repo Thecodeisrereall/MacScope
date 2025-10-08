@@ -1,5 +1,5 @@
 #!/bin/bash
-# test_command.sh — End-to-end diagnostic (manager, daemon, vhidctl ping)
+# test_command.sh — Environment diagnostic without upstream example
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/_common.sh"
@@ -26,11 +26,11 @@ fi
 
 is_running "Karabiner-VirtualHIDDevice-Daemon" || { error "Daemon failed to start"; exit 1; }
 
-# 3) vhidctl ping (must be root)
-if run_vhidctl ping ; then
-  log "vhidctl ping OK ✅"
+# 3) Our ping (must be root; wrapper escalates)
+if run_macscopectl ping ; then
+  log "macscope-vhidctl ping OK ✅"
   exit 0
 else
-  error "vhidctl ping failed ❌"
+  error "macscope-vhidctl ping failed ❌"
   exit 2
 fi

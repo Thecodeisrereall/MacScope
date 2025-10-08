@@ -14,15 +14,13 @@ else
   echo "- Daemon process: NOT RUNNING"
 fi
 
-# Socket dir is root-only; omit check to avoid Permission denied noise
-
-if [[ -x "${VHIDCTL}" ]]; then
-  echo "- vhidctl: PRESENT (${VHIDCTL})"
-  if run_vhidctl ping >/dev/null 2>&1; then
-    echo "- vhidctl ping: OK"
+if [[ -x "${MACSCOPECTL}" ]]; then
+  echo "- macscope-vhidctl: PRESENT (${MACSCOPECTL})"
+  if run_macscopectl ping >/dev/null 2>&1; then
+    echo "- macscope-vhidctl ping: OK"
   else
-    echo "- vhidctl ping: FAILED"
+    echo "- macscope-vhidctl ping: FAILED"
   fi
 else
-  echo "- vhidctl: MISSING (${VHIDCTL})"
+  echo "- macscope-vhidctl: MISSING (${MACSCOPECTL})"
 fi

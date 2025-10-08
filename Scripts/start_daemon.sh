@@ -20,9 +20,3 @@ if is_running "Karabiner-VirtualHIDDevice-Daemon"; then
 else
   error "Daemon failed to start"; exit 1
 fi
-
-if [[ -d "${SOCKET_DIR}" ]]; then
-  log "Socket dir present: ${SOCKET_DIR}"
-else
-  warn "Socket dir not present yet: ${SOCKET_DIR} (will appear after first client connection)."
-fi
