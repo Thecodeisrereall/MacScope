@@ -2,23 +2,6 @@
 # dependencies.sh — verify minimal toolchain; do not auto-install Homebrew
 set -euo pipefail
 
-# === Ensure Homebrew exists ===
-if ! command -v brew >/dev/null 2>&1; then
-  echo "[MacScope] Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  echo "[MacScope] Homebrew installed ✅"
-fi
-
-# === Ensure dependencies exist ===
-echo "[MacScope] Checking dependencies..."
-REQUIRED_TOOLS=("curl" "make" "clang")
-for tool in "${REQUIRED_TOOLS[@]}"; do
-  if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "[MacScope] Installing missing tool: $tool"
-    brew install "$tool"
-  fi
-done
-
 ts(){ date "+%Y-%m-%d %H:%M:%S"; }
 log(){ printf "%s [MacScope] %s\n" "$(ts)" "$*"; }
 warn(){ printf "%s [MacScope] [WARN] %s\n" "$(ts)" "$*" >&2; }
