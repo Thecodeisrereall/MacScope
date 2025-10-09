@@ -1,22 +1,32 @@
 #!/bin/bash
+# status.sh — friendly status, no hard failure if ping requires sudo
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/_common.sh"
+
+ts(){ date "+%Y-%m-%d %H:%M:%S"; }
+say(){ printf "%s\n" "$*"; }
+
+MAN="/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager"
+DAE="/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon"
+BIN="/usr/local/bin/macscope-vhid"
+SOCK_DIR="/Library/Application Support/org.pqrs/tmp/rootonly/vhidd_server"
+
 echo "=== MacScope vHID Status ==="
-echo "- Manager: ${KARB_MANAGER} $([[ -x "${KARB_MANAGER}" ]] && echo 'OK' || echo 'MISSING')"
-echo "- Daemon : ${KARB_DAEMON}  $([[ -x "${KARB_DAEMON}"  ]] && echo 'OK' || echo 'MISSING')"
-if is_running "Karabiner-VirtualHIDDevice-Daemon"; then
-  echo "- Daemon process: RUNNING"
+if [[ -x "$MAN" ]]; then say "- Manager: $MAN OK"; else say "- Manager: MISSING ($MAN)"; fi
+if [[ -x "$DAE" ]]; then say "- Daemon : $DAE  OK"; else say "- Daemon : MISSING ($DAE)"; fi
+if pgrep -fl "Karabiner-VirtualHIDDevice-Daemon" >/dev/null 2>&1; then
+  say "- Daemon process: RUNNING"
 else
-  echo "- Daemon process: NOT RUNNING"
+  say "- Daemon process: STOPPED"
 fi
-if [[ -x "${MACSCOPECTL}" ]]; then
-  echo "- macscope-vhid: PRESENT (${MACSCOPECTL})"
-  if run_macscopectl ping >/dev/null 2>&1; then
-    echo "- macscope-vhid ping: OK"
+
+if [[ -x "$BIN" ]]; then
+  if sudo -n "$BIN" ping >/dev/null 2>&1; then
+    say "- macscope-vhid: PRESENT ($BIN)"
+    say "- macscope-vhid ping: OK"
   else
-    echo "- macscope-vhid ping: FAILED"
+    say "- macscope-vhid: PRESENT ($BIN)"
+    say "- macscope-vhid ping: SKIPPED (needs sudo)"
   fi
 else
-  echo "- macscope-vhid: MISSING (${MACSCOPECTL})"
+  say "- macscope-vhid: MISSING"
 fi

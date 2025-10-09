@@ -1,8 +1,15 @@
 #!/bin/bash
+# start_manager.sh — activate the DriverKit Manager (idempotent)
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/_common.sh"
-[[ -x "${KARB_MANAGER}" ]] || { error "Manager not found at ${KARB_MANAGER}"; exit 1; }
-log "Activating DriverKit via Manager…"
-"${KARB_MANAGER}" activate || true
-log "Manager activation requested ✅"
+
+MAN="/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager"
+ts(){ date "+%Y-%m-%d %H:%M:%S"; }
+log(){ printf "%s [MacScope] %s\n" "$(ts)" "$*"; }
+
+if [[ -x "$MAN" ]]; then
+  log "Activating DriverKit via Manager…"
+  "$MAN" activate || true
+else
+  echo "Manager binary not found at $MAN" >&2
+  exit 1
+fi

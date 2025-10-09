@@ -1,19 +1,19 @@
 {
-  "version": "1.0.7",
-  "karabiner": "6.3.0",
-  "build_date": "2025-10-08",
-  "maintainer": "Thecodeisrereall",
-  "notes": "Improve macscope-vhid ping: search multiple paths, accept any socket filename, 6s wait, verbose diagnostics. test_command.sh waits after daemon start & shows directory content if ping fails.",
+  "version": "1.1.2",
   "files": [
     "_common.sh",
     "dependencies.sh",
-    "build_vhidctl.sh",
+    "build_custom_client.sh",
+    "bringup.sh",
     "start_manager.sh",
     "start_daemon.sh",
-    "test_command.sh",
-    "repair_perms.sh",
     "status.sh",
+    "repair_perms.sh",
     "restart.sh",
-    "manifest.json"
+    "root_phase.sh",
+    "ensure_daemon.sh",
+    "logtail.sh",
+    "build_vhidctl.sh",
+    "test_command.sh"
   ]
 }
