@@ -25,7 +25,11 @@ if [[ -x "$BIN" ]]; then
     say "- macscope-vhid ping: OK"
   else
     say "- macscope-vhid: PRESENT ($BIN)"
-    say "- macscope-vhid ping: SKIPPED (needs sudo)"
+    if sudo "$BIN" ping >/dev/null 2>&1; then
+      say "- macscope-vhid ping: OK"
+    else
+      say "- macscope-vhid ping: FAILED"
+    fi
   fi
 else
   say "- macscope-vhid: MISSING"

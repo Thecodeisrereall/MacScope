@@ -6,7 +6,11 @@ ts(){ date "+%Y-%m-%d %H:%M:%S"; }
 log(){ printf "%s [MacScope] %s\n" "$(ts)" "$*"; }
 die(){ printf "%s [MacScope] [ERROR] %s\n" "$(ts)" "$*" >&2; exit 1; }
 
-[[ ${EUID:-$(id -u)} -eq 0 ]] || die "Run with administrator privileges."
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+  log "Not running as root — attempting to re-run with admin privileges…"
+  exec /usr/bin/osascript -e "do shell script \"sudo '$0'\" with administrator privileges with prompt \"vHID Bring-Up (requires admin)\""
+  exit 0
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$SCRIPT_DIR"
