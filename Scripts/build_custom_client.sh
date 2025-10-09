@@ -15,7 +15,7 @@ OUT="/usr/local/bin/macscope-vhid"
 
 # Optional fallback: fetch source from GitHub if missing locally
 if [[ ! -f "$SRC" ]]; then
-  GH_SRC="https://raw.githubusercontent.com/Thecodeisrereall/MacScope/main/Source/macs-vhid/macscope-vhid.cpp"
+  GH_SRC="curl -L -o macscope-vhid.cpp https://raw.githubusercontent.com/Thecodeisrereall/MacScope/main/Source/cli/macs-vhid/macscope-vhid.cpp"
   log "Client source not found locally; attempting to download from GitHub…"
   mkdir -p "$(dirname "$SRC")"
   if curl -fsSL "$GH_SRC" -o "$SRC"; then
