@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Unique label for launchd -->
+    <key>Label</key>
+    <string>com.macscope.vhidrelay</string>
+
+    <!-- Executable path for relay -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/vhidrelay</string>
+    </array>
+
+    <!-- Run automatically on boot -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart if it exits -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Working directory (safe default) -->
+    <key>WorkingDirectory</key>
+    <string>/usr/local/bin</string>
+
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/var/log/macs_vhidrelay.log</string>
+    <key>StandardErrorPath</key>
+    <string>/var/log/macs_vhidrelay.log</string>
+
+    <!-- Service metadata -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+    <key>MachServices</key>
+    <dict>
+        <key>com.macscope.vhidrelay</key>
+        <true/>
+    </dict>
+
+    <!-- Security: run as root, ensure correct permissions -->
+    <key>UserName</key>
+    <string>root</string>
+    <key>GroupName</key>
+    <string>wheel</string>
+
+    <!-- Graceful timeouts -->
+    <key>ExitTimeOut</key>
+    <integer>5</integer>
+</dict>
+</plist>

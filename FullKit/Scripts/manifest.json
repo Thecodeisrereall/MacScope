@@ -1,0 +1,17 @@
+{
+  "version": "2.0.6",
+  "files": [
+    "dependencies.sh",
+    "install_vhidrelay.sh",
+    "vhidrelay.sh",
+    "bringup.sh",
+    "start_manager.sh",
+    "start_daemon.sh",
+    "status.sh",
+    "repair_perms.sh",
+    "restart.sh",
+    "build_custom_client.sh",
+    "install.sh",
+    "daemon/com.macscope.vhidrelay.plist"
+  ]
+}

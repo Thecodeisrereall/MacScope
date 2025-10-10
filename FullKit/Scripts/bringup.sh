@@ -2,15 +2,21 @@
 # bringup.sh — one prompt: build client (if needed), activate, ensure daemon, create keyboard, test key
 set -euo pipefail
 
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 ts(){ date "+%Y-%m-%d %H:%M:%S"; }
 log(){ printf "%s [MacScope] %s\n" "$(ts)" "$*"; }
 die(){ printf "%s [MacScope] [ERROR] %s\n" "$(ts)" "$*" >&2; exit 1; }
 
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
   log "Not running as root — attempting to re-run with admin privileges…"
-  exec /usr/bin/osascript -e "do shell script \"sudo '$0'\" with administrator privileges with prompt \"vHID Bring-Up (requires admin)\""
+  exec /usr/bin/osascript -e "do shell script \"sudo \\\"$(printf '%q' "$0")\\\"\" with administrator privileges with prompt \"vHID Bring-Up (requires admin)\""
   exit 0
 fi
+
+LOGFILE="/var/log/macscope-vhid/bringup.log"
+mkdir -p "$(dirname "$LOGFILE")"
+exec > >(tee -a "$LOGFILE") 2>&1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$SCRIPT_DIR"
@@ -43,7 +49,7 @@ else
 fi
 
 # 4) Wait for socket (short grace)
-for i in {1..15}; do
+for i in $(seq 1 15); do
   if compgen -G "$SOCK_DIR"/*.sock > /dev/null; then break; fi
   sleep 0.2
 done
@@ -58,3 +64,7 @@ sleep 0.05
 "$BIN" key up   --usage 0x04
 
 log "Bring-up complete ✅"
+
+EXIT_CODE=$?
+log "Script exited with status $EXIT_CODE."
+exit $EXIT_CODE
