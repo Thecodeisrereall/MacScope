@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+mkdir -p /var/log/macscope-vhid
+chmod 755 /var/log/macscope-vhid
+
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 LOG_DIR="/var/log/macscope-vhid"
@@ -29,6 +32,10 @@ error_exit() {
 
 log "Starting vHID relay check..."
 
+if [[ $EUID -ne 0 ]]; then
+  log "WARNING: Script is not running as root."
+fi
+
 # Check required commands
 for cmd in pgrep launchctl "$VHIDCTL"; do
   if ! command -v "$(basename "$cmd")" >/dev/null 2>&1 && [[ ! -x "$cmd" ]]; then
@@ -39,10 +46,7 @@ done
 log "Checking vHID daemon..."
 if ! pgrep -fq "$DAEMON"; then
   log "Daemon not running, starting..."
-  if ! launchctl bootstrap system /Library/LaunchDaemons/org.local.vhid.daemon.plist 2>/dev/null; then
-    log "launchctl bootstrap command failed or already bootstrapped."
-  fi
-  if ! launchctl kickstart -kp system/org.local.vhid.daemon 2>/dev/null; then
+  if ! launchctl kickstart -kp system/org.pqrs.Karabiner-DriverKit-VirtualHIDDevice 2>/dev/null; then
     error_exit "Failed to kickstart daemon."
   fi
   log "Daemon started successfully."

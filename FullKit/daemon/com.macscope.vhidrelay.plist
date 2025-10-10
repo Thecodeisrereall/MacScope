@@ -19,6 +19,8 @@
     <!-- Restart if it exits -->
     <key>KeepAlive</key>
     <true/>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
 
     <!-- Working directory (safe default) -->
     <key>WorkingDirectory</key>
@@ -26,9 +28,9 @@
 
     <!-- Logging -->
     <key>StandardOutPath</key>
-    <string>/var/log/macs_vhidrelay.log</string>
+    <string>/var/log/macscope-vhid/relay.log</string>
     <key>StandardErrorPath</key>
-    <string>/var/log/macs_vhidrelay.log</string>
+    <string>/var/log/macscope-vhid/relay.log</string>
 
     <!-- Service metadata -->
     <key>ProcessType</key>
