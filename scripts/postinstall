@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Postinstall script for MacScope VirtualHID
+# Sets permissions, starts daemon, and verifies installation
+
+set -euo pipefail
+
+RELAY_BIN="/usr/local/bin/macscope-vhid"
+PLIST_PATH="/Library/LaunchDaemons/com.macscope.vhid.relay.plist"
+LOG_FILE="/var/log/macscope-vhid-postinstall.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+log "Starting postinstall configuration..."
+
+# Set binary permissions
+if [[ -f "$RELAY_BIN" ]]; then
+    log "Setting binary permissions..."
+    chown root:wheel "$RELAY_BIN"
+    chmod 755 "$RELAY_BIN"
+    log "Binary permissions set"
+else
+    log "ERROR: Binary not found at $RELAY_BIN"
+    exit 1
+fi
+
+# Set plist permissions
+if [[ -f "$PLIST_PATH" ]]; then
+    log "Setting plist permissions..."
+    chown root:wheel "$PLIST_PATH"
+    chmod 644 "$PLIST_PATH"
+    log "Plist permissions set"
+else
+    log "ERROR: Plist not found at $PLIST_PATH"
+    exit 1
+fi
+
+# Create log file
+touch /var/log/macscope-vhid.log
+chmod 644 /var/log/macscope-vhid.log
+
+# Start daemon
+log "Starting daemon..."
+if launchctl bootstrap system "$PLIST_PATH" 2>> "$LOG_FILE"; then
+    sleep 2
+    
+    if launchctl list | grep -q "com.macscope.vhid.relay"; then
+        log "Daemon started successfully"
+    else
+        log "WARNING: Daemon failed to start"
+        exit 1
+    fi
+else
+    log "ERROR: Failed to bootstrap daemon"
+    exit 1
+fi
+
+# Verify socket creation (wait up to 10 seconds)
+log "Waiting for socket creation..."
+max_wait=10
+waited=0
+
+while [[ $waited -lt $max_wait ]]; do
+    if ls /tmp/macs_vhid_*.sock 2>/dev/null | grep -q .; then
+        log "Socket(s) created successfully"
+        break
+    fi
+    sleep 1
+    waited=$((waited + 1))
+done
+
+if [[ $waited -eq $max_wait ]]; then
+    log "WARNING: Socket not created within ${max_wait} seconds"
+    log "Check daemon logs: tail -f /var/log/macscope-vhid.log"
+fi
+
+log "Postinstall completed"
+exit 0

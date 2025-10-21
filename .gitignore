@@ -1,0 +1,40 @@
+# Binaries
+/payload/macscope-vhid
+*.o
+*.a
+*.dylib
+*.dSYM
+
+# Build artifacts
+/build/*.pkg
+/build/*.dmg
+/build/dist/
+*.xcodeproj
+*.xcworkspace
+
+# Logs
+*.log
+/var/log/
+/tmp/
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Environment
+.env
+.env.local
+
+# Release artifacts
+/releases/
