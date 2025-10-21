@@ -1,11 +1,7 @@
-
-
 {
   "version": "1.0.0",
   "files": [
     "macscope-vhid",
     "com.macscope.vhid.relay.plist"
-  ],
-  "last_updated": "2025-10-21T14:30:00Z",
-  "description": "Manifest file for MacScope VirtualHID relay. Used by the installer to determine version and required files."
+  ]
 }
