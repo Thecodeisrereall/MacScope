@@ -9,29 +9,19 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>
-            LOG="/var/log/macscope-vhid.log"
-            echo "[startup] Waiting for Karabiner VirtualHID driver..." >> "$LOG"
-            for i in {1..15}; do
-                if systemextensionsctl list | grep -q "Karabiner-DriverKit-VirtualHIDDevice.*activated.*enabled"; then
-                    if pgrep -x "Karabiner-VirtualHIDDevice-Daemon" >/dev/null 2>&1; then
-                        echo "[ok] Karabiner VirtualHID ready after $i attempts" >> "$LOG"
-                        break
-                    fi
-                fi
-                echo "[wait] Attempt $i - driver not ready" >> "$LOG"
-                sleep 2
-            done
-            mkdir -p /var/run/macscope
-            chmod 777 /var/run/macscope
-            echo "[launch] Starting macscope-vhid relay" >> "$LOG"
-            exec /usr/local/bin/macscope-vhid --verbose >> "$LOG" 2>&1
-        </string>
+        <string>LOG=/var/log/macscope-vhid.log; echo "[startup] waiting for Karabiner..." &gt;&gt;$LOG; for i in {1..15}; do if systemextensionsctl list | grep -q "Karabiner-DriverKit-VirtualHIDDevice.*activated.*enabled" &amp;&amp; pgrep -x "Karabiner-VirtualHIDDevice-Daemon" &gt;/dev/null 2&gt;&amp;1; then echo "[ok] Karabiner ready after $i tries" &gt;&gt;$LOG; break; fi; echo "[wait] attempt $i/15" &gt;&gt;$LOG; sleep 2; done; mkdir -p /var/run/macscope; chmod 777 /var/run/macscope; echo "[launch] Starting macscope-vhid relay" &gt;&gt;$LOG; exec /usr/local/bin/macscope-vhid --verbose &gt;&gt;$LOG 2&gt;&amp;1</string>
     </array>
 
-    <key>RunAtLoad</key><true/>
-    <key>KeepAlive</key><true/>
-    <key>StandardOutPath</key><string>/var/log/macscope-vhid.log</string>
-    <key>StandardErrorPath</key><string>/var/log/macscope-vhid.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>StandardOutPath</key>
+    <string>/var/log/macscope-vhid.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/var/log/macscope-vhid.log</string>
 </dict>
 </plist>

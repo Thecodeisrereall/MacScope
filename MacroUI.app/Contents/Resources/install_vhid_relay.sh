@@ -2,9 +2,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# Resolve script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Log setup
 LOG_FILE="/var/log/macscope-vhid-install.log"
 touch "$LOG_FILE" 2>/dev/null || LOG_FILE="/tmp/macscope-vhid-install.$$.log"
@@ -30,14 +27,44 @@ if [[ "$(id -u)" != "0" ]]; then
 fi
 echo "[ok] Running as root"
 
-# Step 2: Prepare directories
+# Step 2: CRITICAL - Verify Karabiner readiness FIRST
+echo "[info] Verifying Karabiner VirtualHID is ready..."
+KARABINER_READY=0
+for i in {1..15}; do
+    if systemextensionsctl list 2>/dev/null | grep -q "Karabiner-DriverKit-VirtualHIDDevice.*activated.*enabled"; then
+        if pgrep -x "Karabiner-VirtualHIDDevice-Daemon" >/dev/null 2>&1; then
+            echo "[ok] Karabiner VirtualHID ready after $i attempts (waited $((i*2))s)"
+            KARABINER_READY=1
+            break
+        fi
+    fi
+    echo "[wait] Karabiner not ready yet (attempt $i/15)..."
+    sleep 2
+done
+
+if [[ "$KARABINER_READY" -eq 0 ]]; then
+    echo "[error] Karabiner VirtualHID driver/daemon not ready after 30 seconds"
+    echo "[error]"
+    echo "[error] Required: Karabiner-DriverKit-VirtualHIDDevice must be:"
+    echo "[error]   1. Installed from: https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases"
+    echo "[error]   2. Approved in System Settings > Privacy & Security > System Extensions"
+    echo "[error]   3. Driver activated (restart may be required)"
+    echo "[error]"
+    echo "[error] To verify readiness, run:"
+    echo "[error]   systemextensionsctl list | grep Karabiner"
+    echo "[error]   pgrep -x Karabiner-VirtualHIDDevice-Daemon"
+    echo "[error]"
+    exit 1
+fi
+
+# Step 3: Prepare directories
 echo "[info] Preparing directories..."
 mkdir -p "$(dirname "$BIN_DST")" "$(dirname "$PLIST_DST")" "$SOCKET_DIR" "$(dirname "$VERSION_FILE")"
 chmod 755 "$(dirname "$BIN_DST")" "$(dirname "$PLIST_DST")" "$SOCKET_DIR" "$(dirname "$VERSION_FILE")"
 chown root:wheel "$(dirname "$BIN_DST")" "$(dirname "$PLIST_DST")" "$SOCKET_DIR" "$(dirname "$VERSION_FILE")"
 echo "[ok] Directories prepared"
 
-# Step 3: Download manifest
+# Step 4: Download manifest
 echo "[info] Downloading manifest..."
 TEMP_DIR="$(mktemp -d /tmp/macscope-install.XXXXXX)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
@@ -55,7 +82,7 @@ if [[ ! -s "$MANIFEST_FILE" ]]; then
 fi
 echo "[ok] Manifest downloaded"
 
-# Step 4: Parse manifest using grep/cut (no python3 dependency)
+# Step 5: Parse manifest
 echo "[info] Parsing manifest..."
 MANIFEST_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$MANIFEST_FILE" | cut -d'"' -f4)
 if [[ -z "$MANIFEST_VERSION" ]]; then
@@ -63,35 +90,12 @@ if [[ -z "$MANIFEST_VERSION" ]]; then
     exit 1
 fi
 
-# Extract files array
 FILES_JSON=$(grep -o '"files"[[:space:]]*:[[:space:]]*\[[^\]]*\]' "$MANIFEST_FILE" | sed 's/.*\[\(.*\)\].*/\1/' | tr ',' '\n' | tr -d '"' | tr -d ' ')
 if [[ -z "$FILES_JSON" ]]; then
     echo "[error] Failed to parse files array from manifest"
     exit 1
 fi
 echo "[ok] Manifest version: $MANIFEST_VERSION"
-
-# Step 5: Verify Karabiner VirtualHID readiness BEFORE downloading
-echo "[info] Verifying Karabiner VirtualHID readiness..."
-KARABINER_READY=0
-for i in {1..15}; do
-    if systemextensionsctl list 2>/dev/null | grep -q "Karabiner-DriverKit-VirtualHIDDevice.*activated.*enabled"; then
-        if pgrep -x "Karabiner-VirtualHIDDevice-Daemon" >/dev/null 2>&1; then
-            echo "[ok] Karabiner VirtualHID ready after $i attempts"
-            KARABINER_READY=1
-            break
-        fi
-    fi
-    echo "[info] Waiting for Karabiner VirtualHID ($i/15)..."
-    sleep 2
-done
-
-if [[ "$KARABINER_READY" -eq 0 ]]; then
-    echo "[error] Karabiner VirtualHID driver/daemon not ready after 30 seconds"
-    echo "[error] Please ensure Karabiner-DriverKit-VirtualHIDDevice is installed and approved"
-    echo "[error] Check System Settings > Privacy & Security > System Extensions"
-    exit 1
-fi
 
 # Step 6: Download files
 echo "[info] Downloading files..."
@@ -113,7 +117,7 @@ for filename in $FILES_JSON; do
     echo "[ok] Downloaded $filename"
 done
 
-# Step 7: Stop existing daemon before updating
+# Step 7: Stop existing daemon
 echo "[info] Stopping existing daemon (if running)..."
 launchctl bootout system/"$LABEL" 2>/dev/null || true
 sleep 1
@@ -121,23 +125,30 @@ sleep 1
 # Step 8: Clean stale sockets
 echo "[info] Cleaning stale sockets..."
 rm -f "$SOCKET_DIR"/vhid_*.sock 2>/dev/null || true
+rm -f /tmp/macs_vhid_*.sock 2>/dev/null || true
 echo "[ok] Cleaned stale sockets"
 
-# Step 9: Install files
-echo "[info] Installing files..."
-
-# Install binary
+# Step 9: Install binary with ad-hoc signing
+echo "[info] Installing binary..."
 if [[ -f "$TEMP_DIR/macscope-vhid" ]]; then
     cp "$TEMP_DIR/macscope-vhid" "$BIN_DST"
     chmod 755 "$BIN_DST"
     chown root:wheel "$BIN_DST"
+    
+    # Ad-hoc sign if not already signed
+    if ! codesign --verify "$BIN_DST" 2>/dev/null; then
+        echo "[info] Applying ad-hoc code signature..."
+        codesign -s - -f "$BIN_DST" 2>/dev/null || echo "[warn] Could not ad-hoc sign binary (may not be required)"
+    fi
+    
     echo "[ok] Installed macscope-vhid binary"
 else
     echo "[error] macscope-vhid binary not found in downloaded files"
     exit 1
 fi
 
-# Install plist
+# Step 10: Install plist
+echo "[info] Installing LaunchDaemon plist..."
 if [[ -f "$TEMP_DIR/com.macscope.vhid.relay.plist" ]]; then
     cp "$TEMP_DIR/com.macscope.vhid.relay.plist" "$PLIST_DST"
     chmod 644 "$PLIST_DST"
@@ -148,19 +159,17 @@ else
     exit 1
 fi
 
-# Step 10: Verify plist label matches
+# Step 11: Verify plist label
 echo "[info] Verifying plist configuration..."
 if command -v plutil >/dev/null 2>&1; then
     PLIST_LABEL=$(plutil -extract Label raw -o - "$PLIST_DST" 2>/dev/null || echo "")
     if [[ -n "$PLIST_LABEL" && "$PLIST_LABEL" != "$LABEL" ]]; then
-        echo "[warn] Plist label ($PLIST_LABEL) differs from expected ($LABEL)"
+        echo "[warn] Plist Label ($PLIST_LABEL) differs from expected ($LABEL)"
     fi
 fi
 
-# Step 11: Start daemon
-echo "[info] Starting daemon..."
-
-# Bootstrap
+# Step 12: Bootstrap daemon (only after ALL verification passed)
+echo "[info] Bootstrapping LaunchDaemon..."
 if ! launchctl bootstrap system "$PLIST_DST" 2>&1 | tee -a "$LOG_FILE"; then
     echo "[error] Failed to bootstrap daemon"
     echo "[error] Check: launchctl print system/$LABEL"
@@ -169,21 +178,27 @@ if ! launchctl bootstrap system "$PLIST_DST" 2>&1 | tee -a "$LOG_FILE"; then
 fi
 echo "[ok] Daemon bootstrapped"
 
-# Step 12: Verify daemon status
+# Step 13: Verify daemon status
 echo "[info] Verifying daemon status..."
-sleep 2
+sleep 3
 
 if launchctl print system/"$LABEL" >/dev/null 2>&1; then
     echo "[ok] Daemon is registered in launchctl"
     
-    # Check if daemon has started successfully
+    # Check daemon startup in log
     if [[ -f /var/log/macscope-vhid.log ]]; then
-        if tail -5 /var/log/macscope-vhid.log | grep -q "VirtualHID relay listening"; then
-            echo "[ok] Daemon is running and listening"
-        elif tail -5 /var/log/macscope-vhid.log | grep -q "Waiting for Karabiner"; then
-            echo "[info] Daemon is waiting for VirtualHID driver (this is normal on first boot)"
+        sleep 2  # Give daemon time to write initial logs
+        
+        if tail -10 /var/log/macscope-vhid.log | grep -q "VirtualHID relay listening\|relay listening"; then
+            echo "[ok] Daemon started successfully and is listening"
+        elif tail -10 /var/log/macscope-vhid.log | grep -q "\[startup\].*waiting for Karabiner"; then
+            echo "[info] Daemon is waiting for Karabiner (normal during startup)"
+        elif tail -10 /var/log/macscope-vhid.log | grep -q "ERROR"; then
+            echo "[error] Daemon encountered errors during startup:"
+            tail -5 /var/log/macscope-vhid.log | grep ERROR
+            exit 1
         else
-            echo "[warn] Daemon status unclear, check: tail /var/log/macscope-vhid.log"
+            echo "[info] Daemon started, check logs: tail /var/log/macscope-vhid.log"
         fi
     fi
 else
@@ -191,33 +206,28 @@ else
     exit 1
 fi
 
-# Step 13: Persist version
+# Step 14: Persist version
 echo "[info] Writing version file..."
 echo "$MANIFEST_VERSION" > "$VERSION_FILE"
 chmod 644 "$VERSION_FILE"
 chown root:wheel "$VERSION_FILE"
 echo "[ok] Version $MANIFEST_VERSION written to $VERSION_FILE"
 
-# Step 14: Final verification
-echo "[info] Final verification..."
-if [[ -x "$BIN_DST" ]] && [[ -f "$PLIST_DST" ]] && launchctl print system/"$LABEL" >/dev/null 2>&1; then
-    echo ""
-    echo "=== Installation Successful ==="
-    echo "[ok] MacScope VirtualHID relay installed successfully"
-    echo ""
-    echo "Installation details:"
-    echo "  Binary:        $BIN_DST"
-    echo "  LaunchDaemon:  $PLIST_DST"
-    echo "  Version:       $MANIFEST_VERSION"
-    echo "  Log file:      $LOG_FILE"
-    echo "  Daemon log:    /var/log/macscope-vhid.log"
-    echo ""
-    echo "Monitor daemon status:"
-    echo "  launchctl print system/$LABEL"
-    echo "  tail -f /var/log/macscope-vhid.log"
-    echo ""
-    exit 0
-else
-    echo "[error] Installation verification failed"
-    exit 1
-fi
+# Step 15: Final summary
+echo ""
+echo "=== Installation Complete ==="
+echo "[ok] MacScope VirtualHID relay installed successfully"
+echo ""
+echo "Installation Summary:"
+echo "  Binary:           $BIN_DST"
+echo "  LaunchDaemon:     $PLIST_DST"
+echo "  Version:          $MANIFEST_VERSION"
+echo "  Install Log:      $LOG_FILE"
+echo "  Runtime Log:      /var/log/macscope-vhid.log"
+echo ""
+echo "Verify Installation:"
+echo "  sudo launchctl print system/$LABEL | grep state"
+echo "  sudo tail -f /var/log/macscope-vhid.log"
+echo "  ls -l /tmp/macs_vhid_*.sock"
+echo ""
+exit 0
