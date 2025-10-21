@@ -4,22 +4,42 @@
 <dict>
     <key>Label</key>
     <string>com.macscope.vhid.relay</string>
+
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/macscope-vhid</string>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>
+            #!/bin/bash
+            LOG="/var/log/macscope-vhid.log"
+            echo "[startup] Waiting for Karabiner VirtualHID driver..." >> "$LOG"
+            for i in {1..15}; do
+                if systemextensionsctl list | grep -q "Karabiner-DriverKit-VirtualHIDDevice.*activated.*enabled"; then
+                    if pgrep -x "Karabiner-VirtualHIDDevice-Daemon" >/dev/null 2>&1; then
+                        echo "[ok] Karabiner VirtualHID ready (waited $i s)" >> "$LOG"
+                        break
+                    fi
+                fi
+                echo "[info] Driver not ready ($i/15)" >> "$LOG"
+                sleep 2
+                if [[ "$i" -eq 15 ]]; then
+                    echo "[error] VirtualHID driver never appeared, aborting startup" >> "$LOG"
+                    exit 1
+                fi
+            done
+
+            # Ensure socket directory
+            mkdir -p /var/run/macscope
+            chmod 777 /var/run/macscope
+
+            echo "[launch] Starting macscope-vhid relay..." >> "$LOG"
+            exec /usr/local/bin/macscope-vhid --verbose >> "$LOG" 2>&1
+        </string>
     </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>SUDO_UID</key>
-        <string>501</string>
-    </dict>
-    <key>StandardOutPath</key>
-    <string>/var/log/macscope-vhid.log</string>
-    <key>StandardErrorPath</key>
-    <string>/var/log/macscope-vhid.error.log</string>
+
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>StandardOutPath</key><string>/var/log/macscope-vhid.log</string>
+    <key>StandardErrorPath</key><string>/var/log/macscope-vhid.log</string>
 </dict>
 </plist>
