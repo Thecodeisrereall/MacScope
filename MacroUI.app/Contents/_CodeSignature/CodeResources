@@ -63,7 +63,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			sMGzP1M5FS4PCsWPoGkrQ9Xxe+Y=
+			C0PW41oIpZ4Vfu/QSPTx+cJoDrU=
 			</data>
 			<key>requirement</key>
 			<string>identifier "MacroUI.debug" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: coleson.schmidt@gmail.com (3YN4296TH8)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
