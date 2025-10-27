@@ -1,7 +1,0 @@
-{
-  "version": "1.0.0",
-  "files": [
-    "macscope-vhid",
-    "com.macscope.vhid.relay.plist"
-  ]
-}

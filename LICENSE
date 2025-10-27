@@ -1,9 +1,0 @@
-{
-  "version": "1.0.0",
-  "relay": {
-    "url": "https://raw.githubusercontent.com/<yourname>/MacScope-vHID-Relay/main/macscope-vhid"
-  },
-  "launchd": {
-    "url": "https://raw.githubusercontent.com/<yourname>/MacScope-vHID-Relay/main/com.macscope.vhid.relay.plist"
-  }
-}
