@@ -63,19 +63,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			C0PW41oIpZ4Vfu/QSPTx+cJoDrU=
+			iC6WDkhjteAp1W1t29WrIwv0nKo=
 			</data>
 			<key>requirement</key>
-			<string>identifier "MacroUI.debug" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: coleson.schmidt@gmail.com (3YN4296TH8)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
+			<string>identifier "MacroUI.debug" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "6DU8D76M2L"</string>
 		</dict>
 		<key>MacOS/__preview.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			9FegNM5WrG9TJWJabOriq7gTTNc=
+			uUjJelikaPddJYnDLCe4bHblcIQ=
 			</data>
 			<key>requirement</key>
-			<string>identifier "__preview" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: coleson.schmidt@gmail.com (3YN4296TH8)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
+			<string>identifier "__preview" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "6DU8D76M2L"</string>
 		</dict>
 		<key>Resources/AppIcon.icns</key>
 		<dict>
